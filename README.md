@@ -115,7 +115,7 @@ The screenshots are rendered from the plugin's real view code, styled with Obsid
 
 If this plugin helps you write, you can buy me a coffee:
 
-<a href="https://www.buymeacoffee.com/coffeedrivendev"><img src="https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20coffee&emoji=&slug=coffeedrivendev&button_colour=FFDD00&font_colour=000000&font_family=Bree&outline_colour=000000&coffee_colour=ffffff" alt="Buy me a coffee" height="45"></a>
+<a href="https://buymeacoffee.com/coffeedrivendev"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy me a coffee" height="50"></a>
 
 ## License
 
