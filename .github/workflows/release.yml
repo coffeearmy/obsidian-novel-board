@@ -27,8 +27,14 @@ jobs:
       - run: npm test
       - name: Check the tag matches manifest.json
         run: test "$(node -p "require('./manifest.json').version")" = "$GITHUB_REF_NAME"
+      # Checked at run time, not from the push event, so a repo made public later still gets attested.
+      - name: Check repository visibility
+        id: visibility
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: echo "public=$(gh api "repos/$GITHUB_REPOSITORY" -q '.private | not')" >> "$GITHUB_OUTPUT"
       - name: Attest build provenance
-        if: ${{ !github.event.repository.private }}
+        if: steps.visibility.outputs.public == 'true'
         uses: actions/attest@v4
         with:
           subject-path: |
