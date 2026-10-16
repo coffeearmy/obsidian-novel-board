@@ -10,10 +10,10 @@ export class StructureEditorModal extends Modal {
 		app: App,
 		private plugin: NovelBoardPlugin,
 		initial: CustomStructure,
-		private onSave: (structure: CustomStructure) => void,
+		private onSave: (structure: CustomStructure) => void | Promise<void>,
 	) {
 		super(app);
-		this.draft = JSON.parse(JSON.stringify(initial));
+		this.draft = JSON.parse(JSON.stringify(initial)) as CustomStructure;
 	}
 
 	onOpen() {
@@ -138,7 +138,7 @@ export class StructureEditorModal extends Modal {
 			return;
 		}
 		this.saved = true;
-		this.onSave(clean);
+		void this.onSave(clean);
 		this.close();
 	}
 }

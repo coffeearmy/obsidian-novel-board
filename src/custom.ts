@@ -119,25 +119,28 @@ export function cleanCustom(c: CustomStructure, fallbackName: string): CustomStr
 	return { ...c, name: c.name.trim() || fallbackName, acts };
 }
 
+const isRecord = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object";
+const str = (v: unknown) => (typeof v === "string" ? v : "");
+
+/** Reads custom structures from saved settings, dropping anything malformed. */
 export function parseCustomList(raw: unknown): CustomStructure[] {
 	if (!Array.isArray(raw)) return [];
 	return raw
-		.filter((c): c is CustomStructure => !!c && typeof c === "object" && typeof c.id === "string" && Array.isArray(c.acts))
+		.filter(isRecord)
+		.filter((c) => typeof c.id === "string" && Array.isArray(c.acts))
 		.map((c) => ({
-			id: c.id,
-			name: typeof c.name === "string" ? c.name : "",
-			acts: c.acts
-				.filter((a) => a && Array.isArray(a.stages))
+			id: str(c.id),
+			name: str(c.name),
+			acts: (c.acts as unknown[])
+				.filter(isRecord)
+				.filter((a) => Array.isArray(a.stages))
 				.map((a) => ({
-					name: typeof a.name === "string" ? a.name : "",
+					name: str(a.name),
 					hue: typeof a.hue === "number" ? a.hue : PALETTE[0].hue,
-					stages: a.stages
-						.filter((st) => st && typeof st.id === "string")
-						.map((st) => ({
-							id: st.id,
-							name: typeof st.name === "string" ? st.name : "",
-							desc: typeof st.desc === "string" ? st.desc : "",
-						})),
+					stages: (a.stages as unknown[])
+						.filter(isRecord)
+						.filter((st) => typeof st.id === "string")
+						.map((st) => ({ id: str(st.id), name: str(st.name), desc: str(st.desc) })),
 				})),
 		}));
 }

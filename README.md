@@ -43,7 +43,7 @@ Renaming or moving chapter notes doesn't break the links.
 
 ![Editing a custom mystery structure with three colored acts](docs/images/editor.png)
 
-Create structures in **Settings → Novel Structure Board → Custom structures**. Start blank, or copy any existing structure.
+Create structures in **Settings → Novel Structure Board → Custom structures → Manage**. Start blank, or copy any existing structure.
 
 - **Acts** have an optional name and a color from a post-it palette. Stages in an act get shades of its color automatically.
 - **Stages** have a name and a description. The description is the hint shown on empty cards.
@@ -83,7 +83,7 @@ Choose **Español** in the settings. The board, menus and all stage names switch
 |---|---|
 | Language | English or Spanish. The default follows Obsidian's language. |
 | Default structure | The structure preselected for new boards. |
-| Custom structures | Create, edit and delete your own structures. |
+| Custom structures | Opens a window to create, edit and delete your own structures. |
 
 ## How your data is stored
 
@@ -105,6 +105,7 @@ Removing the plugin leaves your chapter notes untouched.
 npm install
 npm run build        # type-check and bundle main.js
 npm test             # logic tests (node --test)
+npm run lint         # Obsidian's official lint rules (same as the plugin review)
 npm run dev          # rebuild on change
 npm run screenshots  # regenerate the images in docs/images (macOS, needs Obsidian and Chrome)
 ```

@@ -345,11 +345,17 @@ export class BoardView extends TextFileView {
 		this.wireDrag(card, handle, ch);
 	}
 
-	private iconButton(parent: HTMLElement, icon: string, label: string, disabled: boolean, onClick: () => void) {
+	private iconButton(
+		parent: HTMLElement,
+		icon: string,
+		label: string,
+		disabled: boolean,
+		onClick: () => void | Promise<void>,
+	) {
 		const btn = parent.createEl("button", { cls: "clickable-icon", attr: { "aria-label": label } });
 		setIcon(btn, icon);
 		btn.disabled = disabled;
-		btn.onclick = onClick;
+		btn.onclick = () => void onClick();
 	}
 
 	private wireDrag(card: HTMLElement, handle: HTMLElement, ch: Chapter) {
@@ -390,24 +396,30 @@ export class BoardView extends TextFileView {
 	}
 
 	private async openNote(ch: Chapter, index: number, stage: Stage, evt: MouseEvent) {
-		let file = ch.note ? this.app.vault.getAbstractFileByPath(ch.note) : null;
-		if (!(file instanceof TFile)) {
-			if (!this.file) return;
-			const parent = this.file.parent?.path ?? "";
-			const folder = normalizePath(parent && parent !== "/" ? `${parent}/${this.file.basename}` : this.file.basename);
-			if (!(this.app.vault.getAbstractFileByPath(folder) instanceof TFolder)) {
-				await this.app.vault.createFolder(folder);
-			}
-			const fallback = `${this.plugin.t.chapter} ${index + 1}`;
-			const path = normalizePath(`${folder}/${noteFileName(index + 1, ch.title, fallback)}.md`);
-			const existing = this.app.vault.getAbstractFileByPath(path);
-			file = existing instanceof TFile
+		const file = await this.chapterNote(ch, index, stage);
+		if (file) await this.app.workspace.getLeaf(Keymap.isModEvent(evt) || "tab").openFile(file);
+	}
+
+	/** The chapter's linked note, created (with its folder) next to the board if it doesn't exist yet. */
+	private async chapterNote(ch: Chapter, index: number, stage: Stage): Promise<TFile | null> {
+		const linked = ch.note ? this.app.vault.getAbstractFileByPath(ch.note) : null;
+		if (linked instanceof TFile) return linked;
+		if (!this.file) return null;
+		const parent = this.file.parent?.path ?? "";
+		const folder = normalizePath(parent && parent !== "/" ? `${parent}/${this.file.basename}` : this.file.basename);
+		if (!(this.app.vault.getAbstractFileByPath(folder) instanceof TFolder)) {
+			await this.app.vault.createFolder(folder);
+		}
+		const fallback = `${this.plugin.t.chapter} ${index + 1}`;
+		const path = normalizePath(`${folder}/${noteFileName(index + 1, ch.title, fallback)}.md`);
+		const existing = this.app.vault.getAbstractFileByPath(path);
+		const file =
+			existing instanceof TFile
 				? existing
 				: await this.app.vault.create(path, noteTemplate(this.file.path, stage.name[this.lang], ch.title || fallback));
-			ch.note = file.path;
-			this.commit();
-		}
-		await this.app.workspace.getLeaf(Keymap.isModEvent(evt) || "tab").openFile(file as TFile);
+		ch.note = file.path;
+		this.commit();
+		return file;
 	}
 }
 

@@ -1,4 +1,4 @@
-import { App, Modal, Notice, Plugin, PluginSettingTab, Setting, TFolder, moment, normalizePath } from "obsidian";
+import { App, Modal, Notice, Plugin, PluginSettingTab, Setting, SettingDefinitionItem, TFolder, moment, normalizePath } from "obsidian";
 import { emptyBoard, serializeBoard } from "./board";
 import { CustomStructure, blankCustom, copyStructure, parseCustomList, toStructure } from "./custom";
 import { StructureEditorModal } from "./editor";
@@ -33,12 +33,12 @@ export default class NovelBoardPlugin extends Plugin {
 		this.addRibbonIcon("layout-grid", this.t.newBoard, () => this.promptNewBoard());
 		this.addCommand({
 			id: "new-board",
-			name: "New novel board / Nuevo tablero de novela",
+			name: this.t.newBoard,
 			callback: () => this.promptNewBoard(),
 		});
 		this.addCommand({
 			id: "copy-outline",
-			name: "Copy board outline / Copiar esquema del tablero",
+			name: this.t.copyOutline,
 			checkCallback: (checking) => {
 				const view = this.app.workspace.getActiveViewOfType(BoardView);
 				if (view && !checking) void view.copyOutline();
@@ -47,7 +47,7 @@ export default class NovelBoardPlugin extends Plugin {
 		});
 		this.addCommand({
 			id: "save-outline",
-			name: "Save board outline as note / Guardar esquema como nota",
+			name: this.t.saveOutline,
 			checkCallback: (checking) => {
 				const view = this.app.workspace.getActiveViewOfType(BoardView);
 				if (view && !checking) void view.saveOutline();
@@ -66,7 +66,7 @@ export default class NovelBoardPlugin extends Plugin {
 	}
 
 	async loadSettings() {
-		const data = await this.loadData();
+		const data = (await this.loadData()) as (Partial<NovelBoardSettings> & { customStructures?: unknown }) | null;
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, data, {
 			customStructures: parseCustomList(data?.customStructures),
 		});
@@ -102,6 +102,10 @@ export default class NovelBoardPlugin extends Plugin {
 			await this.saveSettings();
 			onSaved?.();
 		}).open();
+	}
+
+	manageCustom(onDone?: () => void) {
+		new CustomStructuresModal(this.app, this, onDone).open();
 	}
 
 	async deleteCustom(id: string): Promise<boolean> {
@@ -151,7 +155,7 @@ class NewBoardModal extends Modal {
 		new Setting(this.contentEl).setName(t.name).addText((text) => {
 			text.onChange((v) => (name = v));
 			text.inputEl.addEventListener("keydown", (e) => {
-				if (e.key === "Enter") submit();
+				if (e.key === "Enter") void submit();
 			});
 			window.setTimeout(() => text.inputEl.focus(), 0);
 		});
@@ -167,12 +171,55 @@ class NewBoardModal extends Modal {
 	}
 }
 
+const LANGUAGES: Record<Lang, string> = { es: "Español", en: "English" };
+
 class NovelBoardSettingTab extends PluginSettingTab {
-	constructor(app: App, private plugin: NovelBoardPlugin) {
+	constructor(
+		app: App,
+		private plugin: NovelBoardPlugin,
+	) {
 		super(app, plugin);
 	}
 
-	display() {
+	private structureOptions(): Record<string, string> {
+		return Object.fromEntries(allStructures().map((st) => [st.id, st.name[this.plugin.settings.language]]));
+	}
+
+	private customSummary(): string {
+		const n = this.plugin.settings.customStructures.length;
+		return n ? `${n} · ${this.plugin.settings.customStructures.map((c) => c.name).join(", ")}` : this.plugin.t.noCustomStructures;
+	}
+
+	getSettingDefinitions(): SettingDefinitionItem[] {
+		const t = this.plugin.t;
+		return [
+			{ name: t.language, desc: t.languageDesc, control: { type: "dropdown", key: "language", options: LANGUAGES } },
+			{
+				name: t.defaultStructure,
+				desc: t.defaultStructureDesc,
+				control: { type: "dropdown", key: "defaultStructure", options: this.structureOptions() },
+			},
+			{ name: t.customStructures, desc: this.customSummary(), action: () => this.plugin.manageCustom() },
+		];
+	}
+
+	getControlValue(key: string): unknown {
+		return this.plugin.settings[key as "language" | "defaultStructure"];
+	}
+
+	async setControlValue(key: string, value: unknown): Promise<void> {
+		if (typeof value !== "string") return;
+		if (key === "language") this.plugin.settings.language = value as Lang;
+		if (key === "defaultStructure") this.plugin.settings.defaultStructure = value;
+		await this.plugin.saveSettings();
+	}
+
+	/** Fallback for Obsidian < 1.13, which never calls getSettingDefinitions(). */
+	display(): void {
+		this.renderFallback();
+	}
+
+	private renderFallback() {
 		const { containerEl } = this;
 		const t = this.plugin.t;
 		containerEl.empty();
@@ -181,52 +228,94 @@ class NovelBoardSettingTab extends PluginSettingTab {
 			.setDesc(t.languageDesc)
 			.addDropdown((dd) =>
 				dd
-					.addOption("es", "Español")
-					.addOption("en", "English")
+					.addOptions(LANGUAGES)
 					.setValue(this.plugin.settings.language)
 					.onChange(async (v) => {
 						this.plugin.settings.language = v as Lang;
 						await this.plugin.saveSettings();
-						this.display();
+						this.renderFallback();
 					}),
 			);
 		new Setting(containerEl)
 			.setName(t.defaultStructure)
 			.setDesc(t.defaultStructureDesc)
-			.addDropdown((dd) => {
-				for (const st of allStructures()) dd.addOption(st.id, st.name[this.plugin.settings.language]);
-				dd.setValue(this.plugin.settings.defaultStructure).onChange(async (v) => {
-					this.plugin.settings.defaultStructure = v;
-					await this.plugin.saveSettings();
-				});
-			});
+			.addDropdown((dd) =>
+				dd
+					.addOptions(this.structureOptions())
+					.setValue(this.plugin.settings.defaultStructure)
+					.onChange(async (v) => {
+						this.plugin.settings.defaultStructure = v;
+						await this.plugin.saveSettings();
+					}),
+			);
+		new Setting(containerEl)
+			.setName(t.customStructures)
+			.setDesc(this.customSummary())
+			.addButton((b) => b.setButtonText(t.manage).onClick(() => this.plugin.manageCustom(() => this.renderFallback())));
+	}
+}
 
-		new Setting(containerEl).setName(t.customStructures).setHeading();
-		for (const c of this.plugin.settings.customStructures) {
+/** Lists the custom structures with edit and delete buttons, and creates new ones (blank or copied). */
+class CustomStructuresModal extends Modal {
+	constructor(
+		app: App,
+		private plugin: NovelBoardPlugin,
+		private onDone?: () => void,
+	) {
+		super(app);
+	}
+
+	onOpen() {
+		this.titleEl.setText(this.plugin.t.customStructures);
+		this.render();
+	}
+
+	onClose() {
+		this.contentEl.empty();
+		this.onDone?.();
+	}
+
+	private render() {
+		const t = this.plugin.t;
+		const lang = this.plugin.settings.language;
+		const el = this.contentEl;
+		el.empty();
+		const list = this.plugin.settings.customStructures;
+		if (!list.length) el.createEl("p", { cls: "setting-item-description", text: t.noCustomStructures });
+		for (const c of list) {
 			const stages = c.acts.reduce((n, a) => n + a.stages.length, 0);
-			new Setting(containerEl)
+			new Setting(el)
 				.setName(c.name)
 				.setDesc(`${stages} ${t.stagesCount}`)
 				.addExtraButton((b) =>
-					b.setIcon("pencil").setTooltip(t.editStructure).onClick(() => this.plugin.editCustom(c.id, () => this.display())),
+					b
+						.setIcon("pencil")
+						.setTooltip(t.editStructure)
+						.onClick(() => this.plugin.editCustom(c.id, () => this.render())),
 				)
 				.addExtraButton((b) =>
-					b.setIcon("trash-2").setTooltip(t.deleteStructure).onClick(async () => {
-						if (await this.plugin.deleteCustom(c.id)) this.display();
-					}),
+					b
+						.setIcon("trash-2")
+						.setTooltip(t.deleteStructure)
+						.onClick(async () => {
+							if (await this.plugin.deleteCustom(c.id)) this.render();
+						}),
 				);
 		}
 		let from = "";
-		new Setting(containerEl)
+		new Setting(el)
 			.setName(t.newStructure)
 			.setDesc(t.newStructureDesc)
 			.addDropdown((dd) => {
 				dd.addOption("", t.startBlank);
-				for (const st of allStructures()) dd.addOption(st.id, st.name[this.plugin.settings.language]);
+				for (const st of allStructures()) dd.addOption(st.id, st.name[lang]);
 				dd.setValue(from).onChange((v) => (from = v));
 			})
 			.addButton((b) =>
-				b.setButtonText(t.create).setCta().onClick(() => this.plugin.newCustom(from || null, () => this.display())),
+				b
+					.setButtonText(t.create)
+					.setCta()
+					.onClick(() => this.plugin.newCustom(from || null, () => this.render())),
 			);
 	}
 }
