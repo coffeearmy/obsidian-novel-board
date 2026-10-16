@@ -1,0 +1,399 @@
+/* Each card/chip sets --nsb-hue; colors derive from it so light and dark themes both work. */
+.nsb-card,
+.nsb-chip {
+	--nsb-bg: hsl(var(--nsb-hue) 85% 87%);
+	--nsb-ink: hsl(var(--nsb-hue) 45% 18%);
+	--nsb-accent: hsl(var(--nsb-hue) 65% 42%);
+}
+
+.theme-dark .nsb-card,
+.theme-dark .nsb-chip {
+	--nsb-bg: hsl(var(--nsb-hue) 28% 22%);
+	--nsb-ink: hsl(var(--nsb-hue) 40% 90%);
+	--nsb-accent: hsl(var(--nsb-hue) 65% 62%);
+}
+
+.nsb-board {
+	padding: var(--size-4-4);
+	max-width: 1400px;
+	margin: 0 auto;
+}
+
+.nsb-header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--size-4-2);
+	margin-bottom: var(--size-4-3);
+}
+
+.nsb-spacer {
+	flex: 1;
+}
+
+/* Legend */
+.nsb-legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--size-4-3) var(--size-4-5);
+	margin-bottom: var(--size-4-5);
+	padding-bottom: var(--size-4-4);
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.nsb-legend-title {
+	font-size: var(--font-ui-smaller);
+	font-weight: var(--font-semibold);
+	color: var(--text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	margin-bottom: var(--size-4-1);
+}
+
+.nsb-legend-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--size-4-1);
+}
+
+.nsb-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--size-4-2);
+	padding: 2px 8px 2px 6px;
+	border-radius: var(--radius-s);
+	border-left: 4px solid var(--nsb-accent);
+	background: var(--nsb-bg);
+	color: var(--nsb-ink);
+	font-size: var(--font-ui-smaller);
+	cursor: pointer;
+	user-select: none;
+}
+
+.nsb-chip:hover,
+.nsb-chip:focus-visible {
+	filter: brightness(0.96);
+	box-shadow: 0 0 0 1px var(--nsb-accent);
+}
+
+.nsb-chip.is-empty {
+	opacity: 0.6;
+}
+
+.nsb-chip-count {
+	font-variant-numeric: tabular-nums;
+	font-weight: var(--font-semibold);
+	opacity: 0.7;
+}
+
+/* Grid of post-its */
+.nsb-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+	gap: var(--size-4-4);
+}
+
+.nsb-card {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-4-1);
+	min-height: 240px;
+	padding: var(--size-4-2) var(--size-4-3) var(--size-4-1);
+	background: var(--nsb-bg);
+	color: var(--nsb-ink);
+	border-top: 6px solid var(--nsb-accent);
+	border-radius: 2px 2px 4px 4px;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.08);
+	transition: box-shadow 120ms ease, opacity 120ms ease;
+}
+
+.nsb-card:focus-within {
+	box-shadow: 0 0 0 2px var(--nsb-accent), 0 4px 14px rgba(0, 0, 0, 0.14);
+}
+
+.nsb-card.is-dragging {
+	opacity: 0.4;
+}
+
+.nsb-card.nsb-drop-before {
+	box-shadow: -4px 0 0 var(--interactive-accent);
+}
+
+.nsb-card.nsb-drop-after {
+	box-shadow: 4px 0 0 var(--interactive-accent);
+}
+
+.nsb-card-top {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-1);
+	min-width: 0;
+}
+
+.nsb-handle {
+	display: flex;
+	cursor: grab;
+	opacity: 0.5;
+	margin-left: -4px;
+}
+
+.nsb-handle:hover {
+	opacity: 1;
+}
+
+.nsb-handle svg {
+	width: 16px;
+	height: 16px;
+}
+
+.nsb-number {
+	font-size: var(--font-ui-smaller);
+	font-weight: var(--font-bold);
+	white-space: nowrap;
+}
+
+.nsb-card select.nsb-stage {
+	flex: 1;
+	min-width: 0;
+	height: auto;
+	padding: 1px 6px;
+	font-size: var(--font-ui-smaller);
+	font-weight: var(--font-semibold);
+	color: var(--nsb-bg);
+	background: var(--nsb-accent);
+	border: none;
+	border-radius: 999px;
+	box-shadow: none;
+	text-overflow: ellipsis;
+	cursor: pointer;
+	-webkit-appearance: none;
+	appearance: none;
+}
+
+.nsb-card input.nsb-title,
+.nsb-card textarea.nsb-summary {
+	width: 100%;
+	padding: 2px 0;
+	color: var(--nsb-ink);
+	background: transparent;
+	border: none;
+	box-shadow: none;
+	font-family: var(--font-text);
+}
+
+.nsb-card input.nsb-title {
+	font-size: 1.1em;
+	font-weight: var(--font-semibold);
+	border-bottom: 1px dashed transparent;
+}
+
+.nsb-card input.nsb-title:focus {
+	border-bottom-color: var(--nsb-accent);
+}
+
+.nsb-card textarea.nsb-summary {
+	flex: 1;
+	min-height: 130px;
+	resize: none;
+	line-height: 1.45;
+}
+
+.nsb-card input.nsb-title::placeholder,
+.nsb-card textarea.nsb-summary::placeholder {
+	color: var(--nsb-ink);
+	opacity: 0.45;
+	font-style: italic;
+}
+
+.nsb-card-footer {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	min-width: 0;
+}
+
+.nsb-card-footer .clickable-icon {
+	color: var(--nsb-ink);
+	opacity: 0.6;
+	padding: 4px;
+}
+
+.nsb-card-footer .clickable-icon:hover:not(:disabled) {
+	opacity: 1;
+	background: rgba(0, 0, 0, 0.06);
+}
+
+.nsb-card-footer .clickable-icon:disabled {
+	opacity: 0.2;
+	cursor: default;
+}
+
+.nsb-card-footer .nsb-note {
+	gap: var(--size-4-1);
+	min-width: 0;
+	font-size: var(--font-ui-smaller);
+}
+
+.nsb-card-footer .nsb-note.has-note {
+	opacity: 0.85;
+}
+
+.nsb-card-footer .nsb-note span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 120px;
+}
+
+.nsb-add-tile {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 240px;
+	border: 2px dashed var(--background-modifier-border);
+	border-radius: 4px;
+	color: var(--text-faint);
+	cursor: pointer;
+}
+
+.nsb-add-tile:hover {
+	color: var(--text-muted);
+	border-color: var(--text-faint);
+}
+
+.nsb-add-tile svg {
+	width: 32px;
+	height: 32px;
+}
+
+.nsb-empty {
+	grid-column: 1 / -1;
+	text-align: center;
+	color: var(--text-muted);
+	padding: var(--size-4-8) var(--size-4-4);
+}
+
+.nsb-total {
+	font-size: var(--font-ui-small);
+	color: var(--text-muted);
+	font-variant-numeric: tabular-nums;
+}
+
+.nsb-words {
+	font-variant-numeric: tabular-nums;
+}
+
+/* Structure editor */
+.nsb-editor-modal {
+	width: min(760px, 95vw);
+}
+
+.nsb-editor-acts {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-4-3);
+	margin: var(--size-4-2) 0;
+}
+
+.nsb-editor-act {
+	--nsb-bg: hsl(var(--nsb-hue) 85% 92%);
+	--nsb-accent: hsl(var(--nsb-hue) 65% 42%);
+	background: var(--nsb-bg);
+	border-left: 5px solid var(--nsb-accent);
+	border-radius: var(--radius-s);
+	padding: var(--size-4-2) var(--size-4-3);
+}
+
+.theme-dark .nsb-editor-act {
+	--nsb-bg: hsl(var(--nsb-hue) 25% 18%);
+	--nsb-accent: hsl(var(--nsb-hue) 65% 62%);
+}
+
+.nsb-editor-act-head,
+.nsb-editor-stage {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-1);
+}
+
+.nsb-editor-act-head {
+	flex-wrap: wrap;
+	margin-bottom: var(--size-4-2);
+}
+
+.nsb-editor-act input.nsb-editor-act-name {
+	flex: 1;
+	min-width: 160px;
+	font-weight: var(--font-semibold);
+}
+
+.nsb-swatches {
+	display: flex;
+	gap: 3px;
+}
+
+/* Extra class in the selector so it beats Obsidian's own button background. */
+.nsb-swatches .nsb-swatch {
+	width: 18px;
+	height: 18px;
+	min-height: 0;
+	padding: 0;
+	border-radius: 50%;
+	border: 2px solid transparent;
+	box-shadow: none;
+	background: hsl(var(--nsb-hue) 70% 60%);
+	cursor: pointer;
+}
+
+.nsb-swatches .nsb-swatch.is-active {
+	border-color: var(--text-normal);
+}
+
+.nsb-editor-stage {
+	margin-bottom: var(--size-4-1);
+}
+
+.nsb-editor-num {
+	width: 2em;
+	text-align: right;
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+	font-variant-numeric: tabular-nums;
+}
+
+.nsb-editor-fields {
+	flex: 1;
+	display: flex;
+	gap: var(--size-4-1);
+	min-width: 0;
+}
+
+.nsb-editor-fields .nsb-editor-stage-name {
+	flex: 2;
+	min-width: 0;
+}
+
+.nsb-editor-fields .nsb-editor-stage-desc {
+	flex: 3;
+	min-width: 0;
+}
+
+.nsb-editor-add,
+.nsb-editor-add-act {
+	font-size: var(--font-ui-small);
+}
+
+.nsb-editor-add {
+	margin-left: 2.4em;
+}
+
+.nsb-editor-hint {
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+}
+
+@media (max-width: 600px) {
+	.nsb-editor-fields {
+		flex-direction: column;
+	}
+}
