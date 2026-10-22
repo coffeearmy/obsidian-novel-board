@@ -1,7 +1,7 @@
 {
 	"id": "novel-structure-board",
 	"name": "Novel Structure Board",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"minAppVersion": "1.4.0",
 	"description": "Plan your novel on a board of colored post-its: one per chapter, colored by its stage in the Hero's Journey, Save the Cat, Three-Act and other structures.",
 	"author": "Elisa De Gregorio",
